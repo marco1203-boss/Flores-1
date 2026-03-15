@@ -3,90 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Ori - Felicidades</title>
+    <title>Para Ori ✨</title>
     <style>
-        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #0f172a, #020617); font-family: sans-serif; color: white; }
-        #instructions { position: absolute; top: 10%; width: 100%; text-align: center; font-size: 1.2em; z-index: 10; pointer-events: none; text-shadow: 0 0 10px #000; }
-        .word-bubble { position: absolute; padding: 10px 20px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; backdrop-filter: blur(5px); pointer-events: none; animation: floatUp 3s forwards; border: 1px solid white; font-weight: bold; }
-        @keyframes floatUp { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, -150px); opacity: 0; } }
+        body { margin: 0; background: #020617; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .flower-container { position: relative; width: 200px; height: 200px; cursor: pointer; transition: transform 0.3s; }
+        .flower-container:active { transform: scale(0.9); }
+        .center { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; background: #fbbf24; border-radius: 50%; transform: translate(-50%, -50%); z-index: 2; box-shadow: 0 0 20px #f59e0b; }
+        .petal { position: absolute; top: 50%; left: 50%; width: 60px; height: 80px; background: #ec4899; border-radius: 50% 50% 0 50%; transform-origin: center bottom; transition: all 0.5s; opacity: 0.9; border: 1px solid #f472b6; }
+        #message { margin-top: 30px; text-align: center; font-size: 1.2em; height: 1.5em; padding: 0 20px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .hint { position: absolute; bottom: 20px; opacity: 0.6; font-size: 0.8em; }
     </style>
 </head>
 <body>
-    <div id="instructions">Ori, ¡Toca la pantalla para ver tus flores! ✨</div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <div id="message">Ori, toca la flor... ✨</div>
+    <div class="flower-container" onclick="breakFlower()">
+        <div class="center"></div>
+        <div id="petals"></div>
+    </div>
+    <div class="hint">(Algo especial para tu investidura)</div>
+
     <script>
-        let scene, camera, renderer, flowers = [];
-        let words = ["¡Felicidades por tu investidura! 🎓", "Eres la mejor ✨", "Orgullo total 💪", "¡A brillar! 🌟", "Te queremos ❤️"];
-        let wordIdx = 0;
+        const petalColors = ['#ec4899', '#f472b6', '#3b82f6', '#60a5fa', '#a855f7'];
+        const phrases = [
+            "¡Felicidades por tu investidura! 🎓",
+            "Tanto esfuerzo valió la pena ✨",
+            "Vas a ser la mejor profesional 💪",
+            "¡Qué orgullo verte así! 🌟",
+            "Te quiero mucho, Ori ❤️"
+        ];
+        let pIndex = 0;
+        const container = document.getElementById('petals');
 
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+        function createPetals() {
+            container.innerHTML = '';
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `translate(-50%, -100%) rotate(${i * 45}deg)`;
+                p.style.backgroundColor = petalColors[Math.floor(Math.random() * petalColors.length)];
+                container.appendChild(p);
+            }
+        }
 
-            const light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(0, 0, 10);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-            const colors = [0xff4dff, 0x00d2ff, 0x7bed9f];
-            colors.forEach((col, i) => {
-                const group = new THREE.Group();
-                const geom = new THREE.SphereGeometry(0.3, 16, 16);
-                const mat = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-                group.add(new THREE.Mesh(geom, mat));
-
-                for(let j=0; j<8; j++) {
-                    const pGeom = new THREE.CapsuleGeometry(0.15, 0.4, 4, 8);
-                    const pMat = new THREE.MeshPhongMaterial({ color: col, transparent: true });
-                    const p = new THREE.Mesh(pGeom, pMat);
-                    p.rotation.z = (j/8) * Math.PI * 2;
-                    p.position.x = Math.cos(p.rotation.z)*0.5;
-                    p.position.y = Math.sin(p.rotation.z)*0.5;
-                    p.userData = { isPetal: true };
-                    group.add(p);
-                }
-                group.position.x = (i - 1) * 2;
-                scene.add(group);
-                flowers.push(group);
+        function breakFlower() {
+            const petals = document.querySelectorAll('.petal');
+            petals.forEach((p, i) => {
+                const angle = i * 45;
+                const dist = 200 + Math.random() * 100;
+                p.style.transform = `translate(${-50 + Math.cos(angle) * dist}%, ${-100 + Math.sin(angle) * dist}%) rotate(${angle + 90}deg)`;
+                p.style.opacity = '0';
             });
+            
+            document.getElementById('message').innerText = phrases[pIndex % phrases.length];
+            pIndex++;
 
-            window.addEventListener('click', (e) => onInteraction(e.clientX, e.clientY));
-            window.addEventListener('touchstart', (e) => onInteraction(e.touches[0].clientX, e.touches[0].clientY));
-            animate();
+            setTimeout(() => {
+                if (petals[0].style.opacity === '0') createPetals();
+            }, 1000);
         }
 
-        function onInteraction(x, y) {
-            const bubble = document.createElement('div');
-            bubble.className = 'word-bubble';
-            bubble.style.left = x + 'px';
-            bubble.style.top = y + 'px';
-            bubble.innerText = words[wordIdx % words.length];
-            wordIdx++;
-            document.body.appendChild(bubble);
-            setTimeout(() => bubble.remove(), 3000);
-
-            flowers.forEach(f => {
-                f.children.forEach(p => {
-                    if(p.userData.isPetal) {
-                        p.position.x += (Math.random()-0.5)*2;
-                        p.position.y -= Math.random();
-                        p.material.opacity -= 0.2;
-                    }
-                });
-            });
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            flowers.forEach((f, i) => f.rotation.y += 0.01 * (i+1));
-            renderer.render(scene, camera);
-        }
-
-        init();
+        createPetals();
     </script>
 </body>
 </html>
