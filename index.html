@@ -3,160 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Ori - Felicidades por tu Investidura</title>
+    <title>Para Ori - Felicidades</title>
     <style>
-        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #0f172a, #020617); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; }
-        #instructions { position: absolute; top: 10%; width: 100%; text-align: center; font-size: 1.5em; text-shadow: 0 0 15px rgba(255,255,255,0.5); pointer-events: none; z-index: 10; padding: 0 20px; box-sizing: border-box; }
-        .word-bubble { position: absolute; padding: 12px 24px; background: rgba(255, 255, 255, 0.15); border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(8px); pointer-events: none; transform: translate(-50%, -50%); opacity: 0; animation: floatUp 4s ease-out forwards; text-align: center; font-weight: bold; font-size: 1.1em; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -200px) scale(1.1); opacity: 0; } }
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #0f172a, #020617); font-family: sans-serif; color: white; }
+        #instructions { position: absolute; top: 10%; width: 100%; text-align: center; font-size: 1.2em; z-index: 10; pointer-events: none; text-shadow: 0 0 10px #000; }
+        .word-bubble { position: absolute; padding: 10px 20px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; backdrop-filter: blur(5px); pointer-events: none; animation: floatUp 3s forwards; border: 1px solid white; font-weight: bold; }
+        @keyframes floatUp { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, -150px); opacity: 0; } }
     </style>
 </head>
 <body>
-
-    <div id="instructions">Ori, toca las flores... ✨<br><small style="font-size: 0.6em; opacity: 0.8;">(Algo especial te espera este lunes)</small></div>
-
+    <div id="instructions">Ori, ¡Toca la pantalla para ver tus flores! ✨</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <script>
-        let scene, camera, renderer, clock;
-        let flowers = [];
-        let raycaster = new THREE.Raycaster();
-        let mouse = new THREE.Vector2();
-        
-        // Frases personalizadas para su investidura
-        let words = [
-            "¡Felicidades por tu investidura! 🎓",
-            "Tantos desvelos valieron la pena ✨",
-            "Vas a ser la mejor en lo que haces 👩‍🎓",
-            "Tu esfuerzo es una inspiración 💪",
-            "¡Qué orgullo verte con tu uniforme! 🌟",
-            "Eres una mujer increíble y fuerte ❤️",
-            "El lunes empieza una etapa brillante 🚀",
-            "¡Disfruta mucho tu ceremonia! 🎉",
-            "Siempre creí en ti, Ori 💖",
-            "¡A brillar este lunes! ✨"
-        ];
-        let wordIndex = 0;
-
-        init();
-        animate();
+        let scene, camera, renderer, flowers = [];
+        let words = ["¡Felicidades por tu investidura! 🎓", "Eres la mejor ✨", "Orgullo total 💪", "¡A brillar! 🌟", "Te queremos ❤️"];
+        let wordIdx = 0;
 
         function init() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1, 7);
-
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.body.appendChild(renderer.domElement);
 
-            clock = new THREE.Clock();
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(0, 0, 10);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
+            const colors = [0xff4dff, 0x00d2ff, 0x7bed9f];
+            colors.forEach((col, i) => {
+                const group = new THREE.Group();
+                const geom = new THREE.SphereGeometry(0.3, 16, 16);
+                const mat = new THREE.MeshPhongMaterial({ color: 0xffff00 });
+                group.add(new THREE.Mesh(geom, mat));
 
-            const pointLight = new THREE.PointLight(0xffffff, 1);
-            pointLight.position.set(5, 5, 5);
-            scene.add(pointLight);
-
-            const colors = [0xff4dff, 0x00d2ff, 0x7bed9f, 0xffa502, 0xff6b81];
-            for (let i = 0; i < 5; i++) {
-                createFlower(colors[i], (i - 2) * 2.2, -1);
-            }
-
-            window.addEventListener('resize', onWindowResize);
-            window.addEventListener('mousedown', onInput);
-            window.addEventListener('touchstart', (e) => onInput(e.touches[0]));
-        }
-
-        function createFlower(color, x, y) {
-            const group = new THREE.Group();
-            group.position.set(x, y, 0);
-
-            // Tallo
-            const stemGeom = new THREE.CylinderGeometry(0.06, 0.1, 4, 8);
-            const stemMat = new THREE.MeshPhongMaterial({ color: 0x2f3640 });
-            const stem = new THREE.Mesh(stemGeom, stemMat);
-            stem.position.y = -2;
-            group.add(stem);
-
-            // Centro
-            const centerGeom = new THREE.SphereGeometry(0.25, 16, 16);
-            const centerMat = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-            const center = new THREE.Mesh(centerGeom, centerMat);
-            group.add(center);
-
-            // Pétalos
-            const petalGeom = new THREE.CapsuleGeometry(0.2, 0.5, 4, 8);
-            const petalMat = new THREE.MeshPhongMaterial({ color: color, shininess: 80, transparent: true, opacity: 0.95 });
-
-            for (let i = 0; i < 10; i++) {
-                const petal = new THREE.Mesh(petalGeom, petalMat.clone());
-                const angle = (i / 10) * Math.PI * 2;
-                petal.position.x = Math.cos(angle) * 0.4;
-                petal.position.y = Math.sin(angle) * 0.4;
-                petal.rotation.z = angle + Math.PI / 2;
-                petal.userData = { isPetal: true, velocity: new THREE.Vector3(Math.cos(angle), Math.sin(angle), 1).multiplyScalar(0.1) };
-                group.add(petal);
-            }
-
-            scene.add(group);
-            flowers.push(group);
-        }
-
-        function onInput(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
-
-            if (intersects.length > 0) {
-                const obj = intersects[0].object;
-                if (obj.userData.isPetal) {
-                    obj.userData.active = true; // Activa la "caída"
-                    showWord(e.clientX, e.clientY);
+                for(let j=0; j<8; j++) {
+                    const pGeom = new THREE.CapsuleGeometry(0.15, 0.4, 4, 8);
+                    const pMat = new THREE.MeshPhongMaterial({ color: col, transparent: true });
+                    const p = new THREE.Mesh(pGeom, pMat);
+                    p.rotation.z = (j/8) * Math.PI * 2;
+                    p.position.x = Math.cos(p.rotation.z)*0.5;
+                    p.position.y = Math.sin(p.rotation.z)*0.5;
+                    p.userData = { isPetal: true };
+                    group.add(p);
                 }
-            }
+                group.position.x = (i - 1) * 2;
+                scene.add(group);
+                flowers.push(group);
+            });
+
+            window.addEventListener('click', (e) => onInteraction(e.clientX, e.clientY));
+            window.addEventListener('touchstart', (e) => onInteraction(e.touches[0].clientX, e.touches[0].clientY));
+            animate();
         }
 
-        function showWord(x, y) {
+        function onInteraction(x, y) {
             const bubble = document.createElement('div');
             bubble.className = 'word-bubble';
-            bubble.innerText = words[wordIndex % words.length];
-            wordIndex++;
             bubble.style.left = x + 'px';
             bubble.style.top = y + 'px';
+            bubble.innerText = words[wordIdx % words.length];
+            wordIdx++;
             document.body.appendChild(bubble);
-            setTimeout(() => bubble.remove(), 4000);
+            setTimeout(() => bubble.remove(), 3000);
+
+            flowers.forEach(f => {
+                f.children.forEach(p => {
+                    if(p.userData.isPetal) {
+                        p.position.x += (Math.random()-0.5)*2;
+                        p.position.y -= Math.random();
+                        p.material.opacity -= 0.2;
+                    }
+                });
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-            const time = clock.getElapsedTime();
-
-            flowers.forEach((group, i) => {
-                group.rotation.y = Math.sin(time + i) * 0.2;
-                group.children.forEach(child => {
-                    if (child.userData.active) {
-                        child.position.add(child.userData.velocity);
-                        child.userData.velocity.y -= 0.005; // Gravedad
-                        child.material.opacity -= 0.01;
-                    }
-                });
-            });
-
+            flowers.forEach((f, i) => f.rotation.y += 0.01 * (i+1));
             renderer.render(scene, camera);
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+        init();
     </script>
 </body>
 </html>
-
