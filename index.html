@@ -5,61 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Para Ori ✨</title>
     <style>
-        body { margin: 0; background: #020617; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .flower-container { position: relative; width: 200px; height: 200px; cursor: pointer; transition: transform 0.3s; }
-        .flower-container:active { transform: scale(0.9); }
-        .center { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; background: #fbbf24; border-radius: 50%; transform: translate(-50%, -50%); z-index: 2; box-shadow: 0 0 20px #f59e0b; }
-        .petal { position: absolute; top: 50%; left: 50%; width: 60px; height: 80px; background: #ec4899; border-radius: 50% 50% 0 50%; transform-origin: center bottom; transition: all 0.5s; opacity: 0.9; border: 1px solid #f472b6; }
-        #message { margin-top: 30px; text-align: center; font-size: 1.2em; height: 1.5em; padding: 0 20px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .hint { position: absolute; bottom: 20px; opacity: 0.6; font-size: 0.8em; }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .canvas-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); }
+        
+        #message { position: absolute; top: 15%; text-align: center; font-size: 1.5em; padding: 0 20px; text-shadow: 0 0 15px #ff00ff; font-weight: bold; transition: all 0.5s; z-index: 5; }
+        
+        /* La Flor Mágica */
+        .flower { position: relative; width: 150px; height: 150px; cursor: pointer; filter: drop-shadow(0 0 15px #ff69b4); }
+        .petal { position: absolute; background: linear-gradient(to top, #ff007f, #ff69b4); width: 50px; height: 100px; border-radius: 50% 50% 10% 50%; left: 50px; top: -25px; transform-origin: bottom center; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.8; border: 1px solid rgba(255,255,255,0.3); }
+        .center { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #fff700, #ffaa00); border-radius: 50%; left: 55px; top: 55px; z-index: 10; box-shadow: 0 0 20px #fff700; }
+        
+        .sparkle { position: absolute; width: 4px; height: 4px; background: white; border-radius: 50%; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="message">Ori, toca la flor... ✨</div>
-    <div class="flower-container" onclick="breakFlower()">
-        <div class="center"></div>
-        <div id="petals"></div>
+    <div class="canvas-container">
+        <div id="message">Ori, toca tu flor de investidura... ✨</div>
+        <div class="flower" onclick="animateFlower()">
+            <div class="center"></div>
+            <div id="petal-system"></div>
+        </div>
     </div>
-    <div class="hint">(Algo especial para tu investidura)</div>
 
     <script>
-        const petalColors = ['#ec4899', '#f472b6', '#3b82f6', '#60a5fa', '#a855f7'];
         const phrases = [
-            "¡Felicidades por tu investidura! 🎓",
-            "Tanto esfuerzo valió la pena ✨",
-            "Vas a ser la mejor profesional 💪",
-            "¡Qué orgullo verte así! 🌟",
-            "Te quiero mucho, Ori ❤️"
+            "¡Felicidades por tu investidura, Ori! 🎓",
+            "Tus desvelos hoy se vuelven luz ✨",
+            "Vas a ser la mejor en lo que haces 👩‍🎓",
+            "Tu esfuerzo es una inspiración 💪",
+            "¡Qué orgullo verte con tu uniforme! 🌟",
+            "A brillar este lunes y siempre ❤️"
         ];
         let pIndex = 0;
-        const container = document.getElementById('petals');
 
         function createPetals() {
-            container.innerHTML = '';
-            for (let i = 0; i < 8; i++) {
+            const system = document.getElementById('petal-system');
+            system.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
                 const p = document.createElement('div');
                 p.className = 'petal';
-                p.style.transform = `translate(-50%, -100%) rotate(${i * 45}deg)`;
-                p.style.backgroundColor = petalColors[Math.floor(Math.random() * petalColors.length)];
-                container.appendChild(p);
+                p.style.transform = `rotate(${i * 36}deg)`;
+                system.appendChild(p);
             }
         }
 
-        function breakFlower() {
+        function animateFlower() {
             const petals = document.querySelectorAll('.petal');
             petals.forEach((p, i) => {
-                const angle = i * 45;
-                const dist = 200 + Math.random() * 100;
-                p.style.transform = `translate(${-50 + Math.cos(angle) * dist}%, ${-100 + Math.sin(angle) * dist}%) rotate(${angle + 90}deg)`;
+                const randomX = (Math.random() - 0.5) * 500;
+                const randomY = (Math.random() - 0.5) * 500;
+                const randomRot = Math.random() * 720;
+                p.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg) scale(0)`;
                 p.style.opacity = '0';
             });
-            
+
             document.getElementById('message').innerText = phrases[pIndex % phrases.length];
             pIndex++;
 
+            // Crear chispas de luz
+            for(let i=0; i<15; i++) createSparkle();
+
             setTimeout(() => {
-                if (petals[0].style.opacity === '0') createPetals();
-            }, 1000);
+                createPetals();
+                if(pIndex >= phrases.length) pIndex = 0;
+            }, 1200);
+        }
+
+        function createSparkle() {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            const container = document.querySelector('.canvas-container');
+            container.appendChild(s);
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            s.style.left = x + 'px';
+            s.style.top = y + 'px';
+            
+            const destX = x + (Math.random() - 0.5) * 400;
+            const destY = y + (Math.random() - 0.5) * 400;
+            
+            s.animate([
+                { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                { transform: `translate(${destX - x}px, ${destY - y}px) scale(0)`, opacity: 0 }
+            ], { duration: 1000, easing: 'ease-out' });
+            
+            setTimeout(() => s.remove(), 1000);
         }
 
         createPetals();
