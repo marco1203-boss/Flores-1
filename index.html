@@ -2,106 +2,241 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Ori ✨</title>
+    <title>Protocolo Investidura_Ori</title>
     <style>
-        body { margin: 0; background: #050505; color: white; font-family: 'Arial', sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        
-        /* Pantalla de Inicio */
-        #intro { position: absolute; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 1s; text-align: center; padding: 20px; }
-        #intro h1 { font-size: 1.8em; color: #ff85a2; text-shadow: 0 0 15px rgba(255,133,162,0.5); }
-        .btn-start { margin-top: 20px; padding: 15px 30px; border: 2px solid #ff85a2; background: none; color: white; border-radius: 30px; font-size: 1.1em; cursor: pointer; }
-
-        /* Contenedor de la Flor */
-        #garden { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-        .flower { position: relative; width: 150px; height: 150px; }
-        .center { position: absolute; width: 50px; height: 50px; background: #f1c40f; border-radius: 50%; left: 50px; top: 50px; z-index: 10; box-shadow: 0 0 20px #f1c40f; transition: all 1s; }
-        
-        .petal { position: absolute; width: 50px; height: 80px; border-radius: 50% 50% 10% 50%; left: 50px; top: -10px; transform-origin: bottom center; transition: transform 1s, opacity 0.5s, top 1s ease-in; cursor: pointer; }
-
-        /* Mensajes y Final */
-        .word { position: absolute; color: white; font-weight: bold; font-size: 1.2em; pointer-events: none; animation: floatUp 2s forwards; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
-        @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100px); opacity: 0; } }
-        
-        #final-message { display: none; position: absolute; text-align: center; width: 90%; font-size: 2em; color: #ff85a2; text-shadow: 0 0 20px #ff85a2; animation: zoomIn 1s; }
-        @keyframes zoomIn { from { scale: 0.5; opacity: 0; } to { scale: 1; opacity: 1; } }
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #1a0f1a 0%, #050505 100%); font-family: 'Segoe UI', monospace; color: white; cursor: crosshair; }
+        #instructions { position: absolute; top: 15%; width: 100%; text-align: center; font-size: 1.8em; text-shadow: 0 0 15px #ff69b4; pointer-events: none; z-index: 100; opacity: 0.9; }
+        .word-bubble { position: absolute; padding: 10px 20px; background: rgba(0, 255, 255, 0.2); border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.4); backdrop-filter: blur(5px); pointer-events: none; animation: floatUpAndFade 4s ease-out forwards; text-align: center; font-weight: bold; }
+        @keyframes floatUpAndFade { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1.2); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="intro">
-        <h1>Esto es para ti, Ori...</h1>
-        <button class="btn-start" onclick="startExperience()">Presiona la pantalla ✨</button>
-    </div>
+    <div id="instructions">Ori, toca tu rosa de investidura... ✨</div>
 
-    <div id="garden">
-        <div class="flower">
-            <div id="flower-center" class="center"></div>
-            <div id="petals-box"></div>
-        </div>
-    </div>
-
-    <div id="final-message">¡Felicidades por tu investidura!<br>TQM ORI ❤️</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        const words = ["Inteligente", "Esforzada", "Brillante", "Capaz", "Única", "Exitosa", "Perseverante", "Admirable"];
-        const colors = ["#ff4dff", "#33ccff", "#99ff33", "#ffcc00", "#ff6666", "#cc99ff", "#00ffcc", "#ff9900"];
-        let petalCount = 8;
+        // --- CONFIGURACIÓN BÁSICA ---
+        let scene, camera, renderer, clock, roseGroup;
+        let petals = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        
+        // Mensajes de éxito personalizados
+        let words = [
+            ">>> INVESTIDURA DETECTADA: [ÉXITO]",
+            "> TUS DESVELOS HOY SE VUELVEN LUZ 💡",
+            "> ASIGNANDO ROL: MEJOR PROFESIONAL 💪",
+            "> ORGULLO TOTAL POR TU ESFUERZO ✨",
+            "> PROTOCOLO DE BRILLO INICIADO 🌟",
+            "> FELICIDADES, LICENCIADA ORI ❤️"
+        ];
+        let wordIndex = 0;
 
-        function startExperience() {
-            document.getElementById('intro').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro').style.display = 'none';
-                document.getElementById('garden').style.display = 'flex';
-                createPetals();
-            }, 1000);
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1, 6); // Vista desde arriba y cerca
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // --- LUCES DE ESTUDIO (Para realismo) ---
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xff69b4, 1);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
+
+            // --- CREACIÓN DE LA ROSA (Forma realista con física) ---
+            roseGroup = new THREE.Group();
+            scene.add(roseGroup);
+
+            // Centro de la flor (cálido)
+            const centerGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xfdcb6e });
+            const center = new THREE.Mesh(centerGeometry, centerMaterial);
+            roseGroup.add(center);
+
+            // Pétalos realistas (Cápsulas suavizadas)
+            const petalGeometry = new THREE.CapsuleGeometry(0.2, 0.6, 6, 12);
+            const petalMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xff0040, 
+                shininess: 90, 
+                transparent: true, 
+                opacity: 0.95 
+            });
+
+            // Creamos capas de pétalos para dar volumen
+            for (let i = 0; i < 5; i++) {
+                const layer = new THREE.Group();
+                const numPetals = 8 + i * 2;
+                for (let j = 0; j < numPetals; j++) {
+                    const petal = new THREE.Mesh(petalGeometry, petalMaterial.clone()); // Material único para animar
+                    const angle = (j / numPetals) * Math.PI * 2;
+                    const radius = 0.6 + i * 0.15;
+                    
+                    petal.position.x = Math.cos(angle) * radius;
+                    petal.position.y = Math.sin(angle) * radius;
+                    petal.position.z = Math.sin(radius * 2) * 0.2; // Suave forma de cuenco
+
+                    petal.rotation.z = angle + Math.PI / 2;
+                    petal.rotation.x = Math.PI / 8; // Inclinación
+
+                    // Guardamos info para el efecto "romper"
+                    petal.userData = { 
+                        isPetal: true, 
+                        initialPosition: petal.position.clone(),
+                        initialRotation: petal.rotation.clone()
+                    };
+                    layer.add(petal);
+                    petals.push(petal);
+                }
+                roseGroup.add(layer);
+            }
+
+            // Tallo (más real, con espinas pequeñas)
+            const stemGeometry = new THREE.CylinderGeometry(0.06, 0.1, 4, 12);
+            const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x3d3132 });
+            const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+            stem.position.y = -2;
+            scene.add(stem);
+
+            // --- EVENTOS ---
+            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('click', onDocumentMouseDown, false);
+            window.addEventListener('touchstart', onDocumentTouchStart, false); // Soporte para tablet
         }
 
-        function createPetals() {
-            const box = document.getElementById('petals-box');
-            for (let i = 0; i < petalCount; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.backgroundColor = colors[i];
-                p.style.transform = `rotate(${i * 45}deg)`;
-                p.onclick = function() { dropPetal(this, i); };
-                box.appendChild(p);
+        // --- INTERACCIÓN ---
+        function onDocumentMouseDown(event) {
+            event.preventDefault();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            checkIntersection(event.clientX, event.clientY);
+        }
+
+        function onDocumentTouchStart(event) {
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                mouse.x = (event.touches[0].pageX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.touches[0].pageY / window.innerHeight) * 2 + 1;
+                checkIntersection(event.touches[0].pageX, event.touches[0].pageY);
             }
         }
 
-        function dropPetal(petal, index) {
-            if (petal.getAttribute('data-dropped')) return;
-            petal.setAttribute('data-dropped', 'true');
+        function checkIntersection(screenX, screenY) {
+            raycaster.setFromCamera(mouse, camera);
             
-            // Efecto de caída
-            const currentRotation = petal.style.transform;
-            petal.style.top = '500px';
-            petal.style.opacity = '0';
-            petal.style.transform = `${currentRotation} rotate(20deg)`;
+            // Comprobamos solo los pétalos para el efecto "romper"
+            const intersects = raycaster.intersectObjects(petals, false);
 
-            // Mostrar palabra bonita
-            const word = document.createElement('div');
-            word.className = 'word';
-            word.innerText = words[index % words.length];
-            word.style.left = window.innerWidth / 2 + 'px';
-            word.style.top = window.innerHeight / 2 + 'px';
-            document.body.appendChild(word);
-
-            petalCount--;
-            if (petalCount === 0) {
-                setTimeout(finish, 1000);
+            if (intersects.length > 0) {
+                const petal = intersects[0].object;
+                if (!petal.userData.active) {
+                    breakPetal(petal);
+                    showWordBubble(screenX, screenY);
+                }
             }
         }
 
-        function finish() {
-            const center = document.getElementById('flower-center');
-            center.style.top = '600px';
-            center.style.opacity = '0';
+        // --- EFECTO DE ROMPER (CAÍDA REALISTA) ---
+        function breakPetal(petal) {
+            petal.userData.active = true;
             
+            // Simulación de física de caída
+            const duration = 2.5; // segundos
+            const startPosition = petal.position.clone();
+            
+            // Objetivo aleatorio en el suelo
+            const targetPosition = new THREE.Vector3(
+                startPosition.x + (Math.random() - 0.5) * 6,
+                startPosition.y - 6 - Math.random() * 2,
+                startPosition.z + (Math.random() - 0.5) * 6
+            );
+
+            // Una pequeña animación de giro aleatorio
+            petal.userData.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.1,
+                y: (Math.random() - 0.5) * 0.1,
+                z: (Math.random() - 0.5) * 0.1
+            };
+
+            petal.userData.animationStartTime = clock.elapsedTime;
+            petal.userData.animationTarget = targetPosition;
+        }
+
+        // --- MOSTRAR PALABRAS FLOTANTES ---
+        function showWordBubble(x, y) {
+            const bubble = document.createElement('div');
+            bubble.className = 'word-bubble';
+            bubble.innerText = words[wordIndex % words.length];
+            wordIndex++;
+            
+            // Posicionamos cerca del toque
+            bubble.style.left = x + 'px';
+            bubble.style.top = y + 'px';
+            
+            document.body.appendChild(bubble);
+
+            // Eliminamos el elemento después de la animación
             setTimeout(() => {
-                document.getElementById('garden').style.display = 'none';
-                document.getElementById('final-message').style.display = 'block';
-            }, 1000);
+                bubble.remove();
+            }, 4000);
+        }
+
+        // --- BUCLE DE ANIMACIÓN ---
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            const delta = clock.getDelta();
+            const time = clock.elapsedTime;
+            
+            // La rosa gira suavemente (realismo)
+            if (roseGroup) roseGroup.rotation.y = time * 0.1;
+
+            // Actualizamos la caída realista de los pétalos "rotos"
+            petals.forEach(petal => {
+                if (petal.userData.active && petal.userData.animationTarget) {
+                    const elapsed = time - petal.userData.animationStartTime;
+                    const duration = 2.5;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Interpolación de posición (Caída)
+                    petal.position.lerpVectors(petal.userData.initialPosition, petal.userData.animationTarget, progress);
+
+                    // Interpolación de rotación (Giro aleatorio al caer)
+                    petal.rotation.x += petal.userData.rotationSpeed.x;
+                    petal.rotation.y += petal.userData.rotationSpeed.y;
+                    petal.rotation.z += petal.userData.rotationSpeed.z;
+
+                    // Desvanecimiento (Opacity)
+                    petal.material.opacity = 1 - progress;
+
+                    // Al final de la animación, ocultamos el pétalo
+                    if (progress === 1) petal.visible = false;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
     </script>
 </body>
